@@ -1,0 +1,91 @@
+1.	Design suitable data structures and implement Pass-I of a two pass assembler for pseudo machine
+#!/usr/bin/env python3
+import ast, sys
+from collections import OrderedDict
+
+OPS = {
+    'STOP':'IS','ADD':'IS','SUB':'IS','MULT':'IS','MOVER':'IS','MOVEM':'IS',
+    'COMP':'IS','BC':'IS','DIV':'IS','READ':'IS','PRINT':'IS',
+    'DC':'DL','DS':'DL','START':'AD','END':'AD','ORIGIN':'AD','EQU':'AD','LTORG':'AD'
+}
+
+def size(op, arg=None):
+    if OPS.get(op)=='IS': return 1
+    if op=='DC': return 1
+    if op=='DS': return int(arg or 0)
+    return 0
+
+def eval_expr(e, sym):
+    e=''.join(str(sym.get(t, t)) if t.isidentifier() else t for t in
+              [''.join(g) if all(x.isalnum() or x=='_' for x in g) else g
+               for g in ''.join(ch if ch.isalnum() or ch in '+-*/=_ ' else f' {ch} '
+               for ch in e.replace(' ','')).split()])
+    return int(eval(compile(ast.parse(e,mode='eval'),'<e>','eval')))
+
+def pass1(lines):
+    sym, lit = OrderedDict(), OrderedDict()
+    pool, inter, loc, start = [0], [], 0, False
+    for raw in lines:
+        t=[x for x in raw.replace(',',' ').split() if x]; 
+        if not t: continue
+        lbl, op, args = None, None, []
+        if len(t)==1: op=t[0].upper()
+        elif len(t)==2: op=t[0].upper(); args=[t[1]]
+        else:
+            lbl=t[0][:-1] if t[0].endswith(':') else (t[0] if t[1].upper() in OPS else None)
+            op=t[1].upper() if lbl else t[0].upper()
+            args=t[2:] if lbl else t[1:]
+        if op=='START': loc=int(args[0]) if args else 0; start=True; inter.append((loc,lbl,op,args)); continue
+        if not start: start=True
+        if lbl: sym[lbl]=loc
+        if op=='ORIGIN': loc=eval_expr(args[0],sym); inter.append((loc,lbl,op,args)); continue
+        if op=='EQU': sym[lbl]=eval_expr(args[0],sym); inter.append((None,lbl,op,args)); continue
+        if op in ('LTORG','END'):
+            for k in list(lit): 
+                if lit[k] is None: lit[k]=loc; loc+=1
+            pool.append(len(lit)); inter.append((None,lbl,op,args))
+            if op=='END': break
+            continue
+        if op in ('DC','DS'): inter.append((loc,lbl,op,args)); loc+=size(op,args[0] if args else None); continue
+        for a in args:
+            if a.startswith('=') and a not in lit: lit[a]=None
+        inter.append((loc,lbl,op,args)); loc+=size(op,args[0] if args else None)
+    return inter, sym, lit, pool
+
+def read_in():
+    fn=input("Enter filename (or press Enter to input lines): ").strip()
+    if fn: return [x.strip() for x in open(fn)]
+    print("Enter assembly lines, end with END:")
+    arr=[]
+    while True:
+        x=input(); arr.append(x)
+        if x.strip().upper()=='END': break
+    return arr
+
+def show(i,s,l,p):
+    print("\nIntermediate File:")
+    for loc,lbl,op,args in i:
+        print(f"{'' if loc is None else loc}\t{lbl or ''}\t{op}\t{','.join(args)}")
+    print("\nSymbol Table:"); [print(f"{k}\t{v}") for k,v in s.items()]
+    print("\nLiteral Table:"); [print(f"{k}\t{v}") for k,v in l.items()]
+    print("\nPool Table:",p)
+
+if __name__=="__main__":
+    try:
+        i,s,l,p=pass1(read_in())
+        show(i,s,l,p)
+    except Exception as e:
+        print("Error:",e); sys.exit(1)                                             
+
+INPUT
+
+START 200
+LOOP MOVER AREG,='5'
+      ADD BREG,VAR
+VAR   DC 10
+      DS 2
+      LTORG
+      ORIGIN 300
+NEW   MOVEM CREG,VAR
+      END
+
