@@ -1,0 +1,20 @@
+14.	Write a program to simulate memory placement strategies Worst Fit
+
+def worstFit(blockSize, m, processSize, n):
+    alloc = [-1]*n
+    for i in range(n):
+        worst = -1
+        for j in range(m):
+            if blockSize[j] >= processSize[i] and (worst == -1 or blockSize[j] > blockSize[worst]):
+                worst = j
+        if worst != -1:
+            alloc[i] = worst
+            blockSize[worst] -= processSize[i]
+    print("Process No. Process Size\tBlock no.")
+    for i in range(n):
+        print(i+1, "\t\t", processSize[i], "\t\t", alloc[i]+1 if alloc[i]!=-1 else "Not Allocated")
+
+if __name__ == '__main__':
+    blockSize = list(map(int, input("Enter memory block sizes (comma-separated): ").split(',')))
+    processSize = list(map(int, input("Enter process sizes (comma-separated): ").split(',')))
+    worstFit(blockSize, len(blockSize), processSize, len(processSize))
