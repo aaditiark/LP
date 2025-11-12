@@ -1,0 +1,22 @@
+18.	Write a program to create dynamic link library for any mathematical operation and write an application program to test it.
+
+# test_mathlib.py — program to test mathlib
+
+# Import the custom library
+import mathlib
+
+# Use its functions
+a = 20
+b = 10
+
+print("Addition:", mathlib.add(a, b))
+print("Subtraction:", mathlib.subtract(a, b))
+print("Multiplication:", mathlib.multiply(a, b))
+print("Division:", mathlib.divide(a, b))
+
+
+OUTPUT
+Addition: 30
+Subtraction: 10
+Multiplication: 200
+Division: 2.0
