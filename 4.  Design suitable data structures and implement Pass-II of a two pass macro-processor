@@ -1,0 +1,94 @@
+4.	Design suitable data structures and implement Pass-II of a two pass macro-processor
+
+import re
+from collections import OrderedDict
+
+def read_lines():
+    print("Enter macro program lines, end with END:")
+    lines=[]
+    while True:
+        l=input().rstrip()
+        lines.append(l)
+        if l.strip().upper()=='END': break
+    return lines
+
+def pass1(lines):
+    MNT, MDT, ALA = OrderedDict(), [], OrderedDict()
+    i=0
+    while i<len(lines):
+        l=lines[i].strip()
+        if l.upper()=='MACRO':
+            i+=1
+            parts=[p for p in re.split(r'[\s,]+', lines[i].strip()) if p]
+            name=parts[0]
+            formals=[f.lstrip('&') for f in parts[1:]] if len(parts)>1 else []
+            ALA[name]=formals
+            MNT[name]={'mdt':len(MDT)+1,'argc':len(formals)}
+            i+=1
+            while i<len(lines):
+                body=lines[i].rstrip()
+                if body.upper()=='MEND': MDT.append('MEND'); i+=1; break
+                for idx,f in enumerate(formals,1): body=re.sub(r'&?'+re.escape(f)+r'\b',f'(P,{idx})',body)
+                MDT.append(body)
+                i+=1
+            continue
+        i+=1
+    return MNT, MDT, ALA
+
+def pass2(lines,MNT,MDT,ALA):
+    exp=[]
+    skip=False
+    for ln in lines:
+        t=[x for x in re.split(r'[\s,]+',ln) if x]
+        if not t: exp.append(ln); continue
+        w=t[0].upper()
+        if w=='MACRO': skip=True; continue
+        if skip and 'MEND' in ln.upper(): skip=False; continue
+        if w in MNT:
+            actuals=[a.strip() for a in ln[len(t[0]):].split(',') if a.strip()]
+            j=MNT[w]['mdt']-1
+            while j<len(MDT):
+                mline=MDT[j]
+                if mline=='MEND': break
+                exp.append(re.sub(r'\(P,(\d+)\)',lambda m: actuals[int(m.group(1))-1],mline))
+                j+=1
+            continue
+        exp.append(ln)
+    return exp
+
+def show(MNT, MDT, ALA, exp):
+    print("\nMNT:\nName\tMDTIndex\tArgCount")
+    for k,v in MNT.items(): print(f"{k}\t{v['mdt']}\t{v['argc']}")
+    print("\nMDT:\nIndex\tDefinition")
+    for i,l in enumerate(MDT,1): print(f"{i}\t{l}")
+    print("\nALA:")
+    for k,a in ALA.items(): print(f"{k}\t{','.join(a) if a else '-'}")
+    print("\nExpanded Program:")
+    for l in exp: print(l)
+
+if __name__=="__main__":
+    lines=read_lines()
+    MNT, MDT, ALA=pass1(lines)
+    exp=pass2(lines,MNT,MDT,ALA)
+    show(MNT, MDT, ALA, exp)
+
+INPUT
+
+MACRO
+INCR &A,&B
+MOVER AREG,&A
+ADD AREG,&B
+MOVEM AREG,&A
+MEND
+MACRO
+DECR &X
+SUB AREG,&X
+MEND
+START 100
+INCR A,B
+DECR C
+END
+
+
+
+
