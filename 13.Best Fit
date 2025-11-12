@@ -1,0 +1,14 @@
+13.	Write a program to simulate memory placement strategies Best Fit
+
+def bestFit(b, p):
+    a = [-1]*len(p)
+    for i in range(len(p)):
+        idx = min((j for j in range(len(b)) if b[j] >= p[i]), key=lambda j:b[j], default=-1)
+        if idx != -1: a[i], b[idx] = idx, b[idx]-p[i]
+    print("PNo\tPSize\tBlock")
+    [print(i+1, p[i], a[i]+1 if a[i]!=-1 else "Not Allocated", sep="\t") for i in range(len(p))]
+
+if __name__ == "__main__":
+    b = list(map(int, input("Blocks: ").split(',')))
+    p = list(map(int, input("Processes: ").split(',')))
+    bestFit(b, p)
