@@ -1,0 +1,24 @@
+5.	Write a program to simulate CPU scheduling algorithm: SJF (Preemptive)
+
+def sjf_preemptive(p):
+    n=len(p);rt=[x[2] for x in p];wt=[0]*n;tat=[0]*n;ct=[0]*n
+    p.sort(key=lambda x:x[1]);t=complete=0
+    while complete<n:
+        s=[i for i in range(n) if p[i][1]<=t and rt[i]>0]
+        if not s:t+=1;continue
+        i=min(s,key=lambda x:rt[x]);rt[i]-=1
+        if rt[i]==0:
+            complete+=1;f=t+1;ct[i]=f;wt[i]=f-p[i][1]-p[i][2]
+            if wt[i]<0:wt[i]=0
+        t+=1
+    for i in range(n):tat[i]=p[i][2]+wt[i]
+    print("\n--- SJF (Preemptive) Scheduling ---")
+    print("PID\tAT\tBT\tWT\tTAT\tCT")
+    for i in range(n):print(f"{p[i][0]}\t{p[i][1]}\t{p[i][2]}\t{wt[i]}\t{tat[i]}\t{ct[i]}")
+    print(f"\nAverage Waiting Time: {sum(wt)/n:.2f}")
+    print(f"Average Turnaround Time: {sum(tat)/n:.2f}")
+
+if __name__=="__main__":
+    n=int(input("Enter number of processes: "))
+    p=[[i+1,int(input(f"AT of P{i+1}: ")),int(input(f"BT of P{i+1}: "))] for i in range(n)]
+    sjf_preemptive(p)
