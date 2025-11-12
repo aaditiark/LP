@@ -1,0 +1,19 @@
+7.	Write a program to simulate CPU scheduling algorithm: FCFS
+
+def fcfs(p):
+    n=len(p);wt=[0]*n;tat=[0]*n
+    p.sort(key=lambda x:x[1])
+    for i in range(1,n):
+        wt[i]=(p[i-1][2]+wt[i-1]+p[i-1][1])-p[i][1]
+        if wt[i]<0:wt[i]=0
+    for i in range(n):tat[i]=p[i][2]+wt[i]
+    print("\n--- FCFS CPU Scheduling ---")
+    print("PID\tArrival\tBurst\tWaiting\tTurnaround")
+    for i in range(n):print(f"{p[i][0]}\t{p[i][1]}\t{p[i][2]}\t{wt[i]}\t{tat[i]}")
+    print(f"\nAverage Waiting Time: {sum(wt)/n:.2f}")
+    print(f"Average Turnaround Time: {sum(tat)/n:.2f}")
+
+if __name__=="__main__":
+    n=int(input("Enter number of processes: "))
+    p=[[i+1,int(input(f"Enter Arrival Time of P{i+1}: ")),int(input(f"Enter Burst Time of P{i+1}: "))] for i in range(n)]
+    fcfs(p)
