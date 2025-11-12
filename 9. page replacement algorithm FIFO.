@@ -1,0 +1,19 @@
+9.	Write a program to simulate page replacement algorithm FIFO. 
+
+def fifo_page_replacement(pages,capacity):
+    m=[];pf=0
+    print("\nFIFO Page Replacement Simulation\n")
+    for p in pages:
+        if p not in m:
+            pf+=1
+            if len(m)==capacity:
+                r=m.pop(0)
+                print(f"Removed Page: {r}")
+            m.append(p)
+            print(f"Inserted Page: {p} -> Memory: {m}")
+        else: print(f"Page {p} already in memory -> No Page Fault")
+    print("\nTotal Page Faults:",pf)
+
+pages=[7,0,1,2,0,3,0,4,2,3,0,3,2]
+capacity=3
+fifo_page_replacement(pages,capacity)
