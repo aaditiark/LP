@@ -1,0 +1,24 @@
+15.	Write a program to simulate memory placement strategies Next Fit
+
+def nextFit(blockSize, m, processSize, n):
+    alloc = [-1]*n
+    j, t = 0, m-1
+    for i in range(n):
+        while j < m:
+            if blockSize[j] >= processSize[i]:
+                alloc[i] = j
+                blockSize[j] -= processSize[i]
+                t = (j-1) % m
+                break
+            if t == j:
+                t = (j-1) % m
+                break
+            j = (j+1) % m
+    print("Process No. Process Size\tBlock no.")
+    for i in range(n):
+        print(i+1, "\t\t", processSize[i], "\t\t", alloc[i]+1 if alloc[i]!=-1 else "Not Allocated")
+
+if __name__ == '__main__':
+    blockSize = list(map(int, input("Enter memory block sizes (comma-separated): ").split(',')))
+    processSize = list(map(int, input("Enter process sizes (comma-separated): ").split(',')))
+    nextFit(blockSize, len(blockSize), processSize, len(processSize))
