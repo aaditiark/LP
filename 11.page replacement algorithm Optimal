@@ -1,0 +1,21 @@
+11.	Write a program to simulate page replacement algorithm Optimal
+
+def optimal_page_replacement(pages,cap):
+    m=[];pf=0
+    print("\nOptimal Page Replacement Simulation\n")
+    for i,p in enumerate(pages):
+        if p not in m:
+            pf+=1
+            if len(m)<cap:m.append(p)
+            else:
+                fut=[pages[i+1:].index(x) if x in pages[i+1:] else float('inf') for x in m]
+                r=m[fut.index(max(fut))]
+                m[m.index(r)]=p
+                print(f"Removed Page: {r}")
+            print(f"Inserted Page: {p} -> Memory: {m}")
+        else:print(f"Page {p} already in memory -> No Page Fault")
+    print("\nTotal Page Faults:",pf)
+
+pages=[7,0,1,2,0,3,0,4,2,3,0,3,2]
+capacity=3
+optimal_page_replacement(pages,capacity)
