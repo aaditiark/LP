@@ -1,0 +1,30 @@
+8.	Write a program to simulate CPU scheduling algorithm: Round Robin (Preemptive)
+
+def round_robin(p,q):
+    n=len(p);rt=[x[2] for x in p];wt=[0]*n;tat=[0]*n;ct=[0]*n
+    t=0;queue=[];arr=[False]*n;done=0
+    p.sort(key=lambda x:x[1])
+    print("\n--- Round Robin (Preemptive) Scheduling ---")
+    while done<n:
+        for i in range(n):
+            if p[i][1]<=t and not arr[i]:
+                queue.append(i);arr[i]=True
+        if not queue: t+=1;continue
+        c=queue.pop(0);pid,at,bt=p[c]
+        ex=min(q,rt[c]);rt[c]-=ex;t+=ex
+        for i in range(n):
+            if p[i][1]<=t and not arr[i]:
+                queue.append(i);arr[i]=True
+        if rt[c]==0:
+            done+=1;ct[c]=t;tat[c]=t-at;wt[c]=tat[c]-bt
+        else: queue.append(c)
+    print("PID\tAT\tBT\tWT\tTAT\tCT")
+    for i in range(n):print(f"{p[i][0]}\t{p[i][1]}\t{p[i][2]}\t{wt[i]}\t{tat[i]}\t{ct[i]}")
+    print(f"\nAverage Waiting Time: {sum(wt)/n:.2f}")
+    print(f"Average Turnaround Time: {sum(tat)/n:.2f}")
+
+if __name__=="__main__":
+    n=int(input("Enter number of processes: "))
+    p=[[i+1,int(input(f"Enter Arrival Time of P{i+1}: ")),int(input(f"Enter Burst Time of P{i+1}: "))]for i in range(n)]
+    q=int(input("Enter Time Quantum: "))
+    round_robin(p,q)
