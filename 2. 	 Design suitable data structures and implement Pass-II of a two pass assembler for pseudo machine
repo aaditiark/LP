@@ -1,0 +1,91 @@
+2.	 Design suitable data structures and implement Pass-II of a two pass assembler for pseudo machine
+
+     from collections import OrderedDict
+
+OPS = {'STOP':'IS','ADD':'IS','SUB':'IS','MULT':'IS','MOVER':'IS','MOVEM':'IS',
+       'COMP':'IS','BC':'IS','DIV':'IS','READ':'IS','PRINT':'IS',
+       'DC':'DL','DS':'DL','START':'AD','END':'AD','ORIGIN':'AD','EQU':'AD','LTORG':'AD'}
+OPCODE = {'STOP':0,'ADD':1,'SUB':2,'MULT':3,'MOVER':4,'MOVEM':5,'COMP':6,'BC':7,'DIV':8,'READ':9,'PRINT':10}
+REG = {'AREG':1,'BREG':2,'CREG':3}
+
+def size(op, arg=None):
+    if OPS.get(op)=='IS': return 1
+    if op=='DC': return 1
+    if op=='DS': return int(arg or 0)
+    return 0
+
+def eval_expr(e, sym):
+    e = ''.join(ch if ch.isalnum() or ch in '+-*/()_ ' else f' {ch} ' for ch in e)
+    return int(eval(''.join(str(sym.get(x, x)) for x in e.split())))
+
+def pass1(lines):
+    sym, lit, pool, inter, loc = OrderedDict(), OrderedDict(), [0], [], 0
+    for raw in lines:
+        t = [x for x in raw.replace(',', ' ').split() if x]
+        if not t: continue
+        lbl, op, args = None, t[0].upper(), t[1:]
+        if ':' in t[0]: lbl, op, args = t[0][:-1], t[1].upper(), t[2:]
+        elif len(t)>1 and t[1].upper() in OPS: lbl, op, args = t[0], t[1].upper(), t[2:]
+        if op=='START': loc=int(args[0]); inter.append((loc,lbl,op,args)); continue
+        if lbl: sym[lbl]=loc
+        if op=='ORIGIN': loc=eval_expr(args[0],sym); inter.append((loc,lbl,op,args)); continue
+        if op=='EQU': sym[lbl]=eval_expr(args[0],sym); inter.append((None,lbl,op,args)); continue
+        if op in ('LTORG','END'):
+            for k in list(lit):
+                if lit[k] is None: lit[k]=loc; loc+=1
+            pool.append(len(lit)); inter.append((None,lbl,op,args))
+            if op=='END': break
+            continue
+        if op in ('DC','DS'): inter.append((loc,lbl,op,args)); loc+=size(op,args[0]); continue
+        for a in args:
+            if a.startswith('=') and a not in lit: lit[a]=None
+        inter.append((loc,lbl,op,args)); loc+=size(op)
+    return inter, sym, lit, pool
+
+def gen_machine(inter, sym, lit):
+    mc = []
+    for loc, lbl, op, args in inter:
+        if loc is None: continue
+        if OPS.get(op)=='IS':
+            code, r, addr = OPCODE[op], 0, 0
+            if args:
+                if args[0].upper() in REG: r = REG[args[0].upper()]
+                if len(args)>1:
+                    a = args[1]
+                    if a.startswith('='): addr = lit[a]
+                    elif a in sym: addr = sym[a]
+                    elif a.isdigit(): addr = int(a)
+            mc.append((loc, f"{code:02d} {r} {addr}"))
+        elif op=='DC': mc.append((loc, f"00 0 {args[0]}"))
+        elif op=='DS': [mc.append((loc+i, "00 0 0")) for i in range(int(args[0]))]
+    return mc
+
+def show(mc, sym, lit, pool, inter):
+    print("\nMachine Code:"); [print(f"{l}\t{c}") for l,c in mc]
+    print("\nIntermediate File:"); [print(f"{'' if l is None else l}\t{lb or ''}\t{o}\t{','.join(a)}") for l,lb,o,a in inter]
+    print("\nSymbol Table:"); [print(f"{k}\t{v}") for k,v in sym.items()]
+    print("\nLiteral Table:"); [print(f"{k}\t{v}") for k,v in lit.items()]
+    print("\nPool Table:", pool)
+
+if __name__=="__main__":
+    print("Enter assembly lines, end with END:")
+    lines = []
+    while True:
+        l = input().strip()
+        lines.append(l)
+        if l.upper() == 'END': break
+    inter, sym, lit, pool = pass1(lines)
+    mc = gen_machine(inter, sym, lit)
+    show(mc, sym, lit, pool, inter)
+
+INPUT
+START 100
+MOVER AREG, ='5'
+ADD BREG, ONE
+ONE DC 1
+END
+
+
+
+
+
