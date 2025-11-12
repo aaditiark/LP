@@ -1,0 +1,23 @@
+10.	Write a program to simulate page replacement algorithm LRU
+
+from collections import OrderedDict
+class LRU:
+    def __init__(s,c):s.c=c;s.m=OrderedDict()
+    def refer(s,p):
+        if p in s.m:s.m.move_to_end(p)
+        else:
+            if len(s.m)>=s.c:s.m.popitem(last=False)
+            s.m[p]=None
+def lru_page_replacement(pages,c):
+    l=LRU(c);f=0
+    for p in pages:
+        if p not in l.m:
+            print(f"Page {p} is loaded into the memory.")
+            l.refer(p);f+=1
+        else:print(f"Page {p} is already in the memory.")
+    print(f"\nTotal Page Faults: {f}")
+    print(f"\nTotal Page Hits: {len(pages)-f}")
+
+pages=[7,0,1,2,0,3,0,4,2,3,0,3,1,2,0]
+capacity=3
+lru_page_replacement(pages,capacity)
